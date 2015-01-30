@@ -1,0 +1,13 @@
+[Downloaded Anime Name 1]
+rename: Your Anime Name 1
+digits: The episode number digits you want
+goto: C:\Your\Anime1\Destiny\Path
+
+[Downloaded Anime Name 2]
+rename: Your Anime Name 2
+digits: The episode number digits you want
+goto: C:\Your\Anime2\Destiny\Path
+
+[Downloaded Anime Name 2:extra-goto]
+1: range=1-200		| C:\Your\Anime2\Destiny\Path2
+2: contains=1080p	| C:\Your\Anime2\Destiny\Path3
