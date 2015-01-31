@@ -3,29 +3,23 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.0.0
+#  - Version:   1.0.1
 #  - Created:   2015/01/28
-#  - Updated:   2015/01/30
+#  - Updated:   2015/01/31
 # ----------------------------------------------------------------------------
 # This is a from scratch clean version of a program I wrote years ago.
 # I was tired of manually renaming and moving my anime downloads, so I wanted
 # a script to do it for me.
 
-# ---------------------------------------------------------------------------
-# imports
-# ---------------------------------------------------------------------------
 from os.path import basename, isdir, join, exists
 from os import listdir, walk, rmdir, unlink, rename as move_file
 from fnmatch import filter as fnfilter
 from glob import glob
-from codecs import open as uopen
-from iniparse import INIConfig
-from iniparse.config import Undefined
+from config import Config, conf_exist
 
 # ---------------------------------------------------------------------------
 # functions
 # ---------------------------------------------------------------------------
-conf_exist = lambda e: type(e) != Undefined
 get_instring_list = lambda separator, string: [e.strip() for e in string.split(separator)]
 get_instring_var = lambda operator, string: dict(zip(['name', 'value'], string.split(operator)))
 get_instring_range = lambda separator, string: dict(zip(['start', 'end'], [int(i) for i in string.split(separator)]))
@@ -33,13 +27,6 @@ get_instring_range = lambda separator, string: dict(zip(['start', 'end'], [int(i
 # ---------------------------------------------------------------------------
 # classes
 # ---------------------------------------------------------------------------
-class Config:
-	""" Shortcuts to the ini parser. Loads `self.x` as the INIConfig object. """
-	
-	def __init__(self, file): self.x = INIConfig(uopen(file, 'r', 'utf8'))
-	def get_sections(self): return [e for e in self.x]
-	def get_values_from_section(self, section): return [self.x[section][e] for e in self.x[section]]
-
 class AnimeConfig(Config):
 	""" Contains all the preferences about how the episode files are going
 		to be stored. """
