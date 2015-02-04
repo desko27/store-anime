@@ -91,8 +91,8 @@ class EpisodeParser:
 			# detect opening/ending
 			for field in ['opening', 'ending']:
 				if conf_exist(self.cfg_data[field]):
-					value = dict(zip(['pattern', 'rename'], get_instring_list('|', self.cfg_data[field])))
-					if value['pattern'].lower() in self.filename_wellspaced.lower():
+					value = dict(zip(['source', 'rename'], get_instring_list('|', self.cfg_data[field])))
+					if value['source'].lower() in self.filename_wellspaced.lower():
 						self.new_filename = (value['rename'] + '.' + self.file_extension) % self.add_zeros(self.number, 2)
 						break
 			
@@ -231,7 +231,7 @@ if __name__ == '__main__':
 	
 	# retrieve config values
 	conf = Config('conf.ini')
-	anime_conf = AnimeConfig(conf.x.paths.patterns)
+	anime_conf = AnimeConfig(conf.x.paths.sources)
 	
 	# collect the episode files
 	source_folders = conf.get_values_from_section('source-folders')

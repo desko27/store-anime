@@ -5,7 +5,7 @@ max_sense_episode_number: 5000
 
 [paths]
 mplayer:	C:\Path\To\Your\MediaPlayer.exe
-patterns:	anime.ini
+sources:	anime.ini
 log:		log_file.txt
 shortcuts:	shortcuts-log
 
