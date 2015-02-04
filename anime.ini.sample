@@ -3,6 +3,9 @@ rename: Your Anime Name 1
 digits: The episode number digits you want
 goto: C:\Your\Anime1\Destiny\Path
 
+; optional
+pattern: %(rename)s - %(number)s
+
 [Downloaded Anime Name 2]
 rename: Your Anime Name 2
 digits: The episode number digits you want

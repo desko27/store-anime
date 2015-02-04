@@ -2,6 +2,7 @@
 spacers: _
 extensions: mkv, mp4, avi
 max_sense_episode_number: 5000
+default_pattern: %(rename)s %(number)s
 
 [paths]
 mplayer:	C:\Path\To\Your\MediaPlayer.exe

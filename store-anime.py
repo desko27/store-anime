@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.0.1
+#  - Version:   1.0.2
 #  - Created:   2015/01/28
-#  - Updated:   2015/01/31
+#  - Updated:   2015/02/04
 # ----------------------------------------------------------------------------
 # This is a from scratch clean version of a program I wrote years ago.
 # I was tired of manually renaming and moving my anime downloads, so I wanted
@@ -15,7 +15,7 @@ from os.path import basename, isdir, join, exists
 from os import listdir, walk, rmdir, unlink, rename as move_file
 from fnmatch import filter as fnfilter
 from glob import glob
-from config import Config, conf_exist
+from config import Config, conf_exists
 
 # ---------------------------------------------------------------------------
 # functions
@@ -36,7 +36,7 @@ class AnimeConfig(Config):
 		
 	def get_extra_goto_list(self, show):
 		section = '%s:extra-goto' % show
-		if not conf_exist(self.x[section]): return []
+		if not conf_exists(self.x[section]): return []
 		return [dict(zip(['condition', 'path'], get_instring_list('|', e))) for e in self.get_values_from_section(section)]
 	
 class EpisodesCollector:
@@ -87,21 +87,34 @@ class EpisodeParser:
 	def generate_new_filename(self):
 		# there's a number, it's episode or opening/ending
 		if self.number != None:
+		
+			source_data = {
+				'rename': self.cfg_data.rename,
+				'number': self.add_zeros(self.number, self.cfg_data.digits),
+				'number2d': self.add_zeros(self.number, 2)
+			}
 			
 			# detect opening/ending
 			for field in ['opening', 'ending']:
-				if conf_exist(self.cfg_data[field]):
-					value = dict(zip(['source', 'rename'], get_instring_list('|', self.cfg_data[field])))
+				if conf_exists(self.cfg_data[field]):
+					value = dict(zip(['source', 'pattern'], get_instring_list('|', self.cfg_data[field])))
 					if value['source'].lower() in self.filename_wellspaced.lower():
-						self.new_filename = (value['rename'] + '.' + self.file_extension) % self.add_zeros(self.number, 2)
+						self.new_filename = value['pattern'] % source_data
 						break
 			
 			# pure episode, not opening/ending
-			else: self.new_filename = '%s %s.%s' % (self.cfg_data.rename, self.add_zeros(self.number, self.cfg_data.digits), self.file_extension)
+			else:
+				if conf_exists(self.cfg_data.pattern): pattern = self.cfg_data.pattern
+				else: pattern = conf.x.common.default_pattern
+				
+				self.new_filename = pattern % source_data
 			
 		# if it has not a number then should ask what to do (let me write a filename)
 		else:
 			self.new_filename = raw_input(u'[%s] new filename -> ' % self.filename)
+			
+		# add extension
+		self.new_filename += '.%s' % self.file_extension
 	
 	def set_filename_wellspaced(self):
 		different_spacer_strings = [self.filename.replace(spacer, ' ') for spacer in get_instring_list(',', conf.x.common.spacers)]
