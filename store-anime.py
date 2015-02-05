@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.0.2
+#  - Version:   1.0.3
 #  - Created:   2015/01/28
 #  - Updated:   2015/02/04
 # ----------------------------------------------------------------------------
@@ -85,6 +85,11 @@ class EpisodeParser:
 		return False
 		
 	def generate_new_filename(self):
+		# allow only move when rename field is missing
+		if not conf_exists(self.cfg_data.rename):
+			self.new_filename = self.filename
+			return
+	
 		# there's a number, it's episode or opening/ending
 		if self.number != None:
 		
@@ -109,7 +114,7 @@ class EpisodeParser:
 				
 				self.new_filename = pattern % source_data
 			
-		# if it has not a number then should ask what to do (let me write a filename)
+		# there's not a number, should ask what to do (let me write a filename)
 		else:
 			self.new_filename = raw_input(u'[%s] new filename -> ' % self.filename)
 			
