@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.0.3
+#  - Version:   1.0.4
 #  - Created:   2015/01/28
-#  - Updated:   2015/02/04
+#  - Updated:   2015/02/06
 # ----------------------------------------------------------------------------
 # This is a from scratch clean version of a program I wrote years ago.
 # I was tired of manually renaming and moving my anime downloads, so I wanted
@@ -15,7 +15,9 @@ from os.path import basename, isdir, join, exists
 from os import listdir, walk, rmdir, unlink, rename as move_file
 from fnmatch import filter as fnfilter
 from glob import glob
-from config import Config, conf_exists
+
+# custom classes
+from class_Config import Config, conf_exists
 
 # ---------------------------------------------------------------------------
 # functions
@@ -32,11 +34,11 @@ class AnimeConfig(Config):
 		to be stored. """
 	
 	def get_shows(self):
-		return [e for e in self.x if not e.endswith(':extra-goto')]
+		return [e for e in self if not e.endswith(':extra-goto')]
 		
 	def get_extra_goto_list(self, show):
 		section = '%s:extra-goto' % show
-		if not conf_exists(self.x[section]): return []
+		if not conf_exists(self[section]): return []
 		return [dict(zip(['condition', 'path'], get_instring_list('|', e))) for e in self.get_values_from_section(section)]
 	
 class EpisodesCollector:
@@ -79,7 +81,7 @@ class EpisodeParser:
 		for e in self.anime_conf.get_shows():
 			if e.lower() in self.filename_wellspaced.lower():
 				self.id = e
-				self.cfg_data = self.anime_conf.x[e]
+				self.cfg_data = self.anime_conf[e]
 				self.goto = self.cfg_data.goto
 				return True
 		return False
@@ -110,7 +112,7 @@ class EpisodeParser:
 			# pure episode, not opening/ending
 			else:
 				if conf_exists(self.cfg_data.pattern): pattern = self.cfg_data.pattern
-				else: pattern = conf.x.common.default_pattern
+				else: pattern = conf.common.default_pattern
 				
 				self.new_filename = pattern % source_data
 			
@@ -122,7 +124,7 @@ class EpisodeParser:
 		self.new_filename += '.%s' % self.file_extension
 	
 	def set_filename_wellspaced(self):
-		different_spacer_strings = [self.filename.replace(spacer, ' ') for spacer in get_instring_list(',', conf.x.common.spacers)]
+		different_spacer_strings = [self.filename.replace(spacer, ' ') for spacer in get_instring_list(',', conf.common.spacers)]
 		self.filename_wellspaced = max(different_spacer_strings, key = lambda x: x.count(' '))
 		
 	def set_number(self):
@@ -135,7 +137,7 @@ class EpisodeParser:
 			
 			try:
 				number = int(word)
-				if 0 <= number <= int(conf.x.common.max_sense_episode_number):
+				if 0 <= number <= int(conf.common.max_sense_episode_number):
 					self.number = number
 					return
 					
@@ -192,10 +194,10 @@ class Logger:
 	def __init__(self):
 		pass
 		
-	def add_line(self):
+	def save_line(self):
 		pass
 		
-	def add_shortcut(self):
+	def save_shortcut(self):
 		pass
 	
 class TrashRemover:
@@ -249,11 +251,11 @@ if __name__ == '__main__':
 	
 	# retrieve config values
 	conf = Config('conf.ini')
-	anime_conf = AnimeConfig(conf.x.paths.sources)
+	anime_conf = AnimeConfig(conf.paths.sources)
 	
 	# collect the episode files
 	source_folders = conf.get_values_from_section('source-folders')
-	episodes_collector = EpisodesCollector(source_folders, get_instring_list(',', conf.x.common.extensions))
+	episodes_collector = EpisodesCollector(source_folders, get_instring_list(',', conf.common.extensions))
 	files = episodes_collector.get_files()
 	
 	# iterate over found files
@@ -273,8 +275,8 @@ if __name__ == '__main__':
 		# log a success
 		successful_files.append(file)
 		logger = Logger()
-		logger.add_line()
-		logger.add_shortcut()
+		logger.save_line()
+		logger.save_shortcut()
 		
 	# clean trash
 	trash_remover = TrashRemover(source_folders)

@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.0.2
+#  - Version:   2.0.0
 #  - Created:   2015/01/28
-#  - Updated:   2015/02/04
+#  - Updated:   2015/02/06
 # ----------------------------------------------------------------------------
 
 from iniparse import INIConfig
@@ -20,9 +20,8 @@ conf_exists = lambda e: type(e) != Undefined
 # ---------------------------------------------------------------------------
 # classes
 # ---------------------------------------------------------------------------
-class Config:
-	""" Shortcuts to the ini parser. Loads `self.x` as the INIConfig object. """
-	
-	def __init__(self, file): self.x = INIConfig(uopen(file, 'r', 'utf8'))
-	def get_sections(self): return [e for e in self.x]
-	def get_values_from_section(self, section): return [self.x[section][e] for e in self.x[section]]
+class Config(INIConfig):
+
+	def __init__(self, file): super(Config, self).__init__(uopen(file, 'r', 'utf8'))
+	def get_sections(self): return [e for e in self]
+	def get_values_from_section(self, section): return [self[section][e] for e in self[section]]
