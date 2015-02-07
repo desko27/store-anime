@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.0.4
+#  - Version:   1.0.4b
 #  - Created:   2015/01/28
-#  - Updated:   2015/02/06
+#  - Updated:   2015/02/07
 # ----------------------------------------------------------------------------
 # This is a from scratch clean version of a program I wrote years ago.
 # I was tired of manually renaming and moving my anime downloads, so I wanted
@@ -120,8 +120,9 @@ class EpisodeParser:
 		else:
 			self.new_filename = raw_input(u'[%s] new filename -> ' % self.filename)
 			
-		# add extension
-		self.new_filename += '.%s' % self.file_extension
+		# add extension if needed
+		if not self.new_filename.endswith('.%s' % self.file_extension):
+			self.new_filename += '.%s' % self.file_extension
 	
 	def set_filename_wellspaced(self):
 		different_spacer_strings = [self.filename.replace(spacer, ' ') for spacer in get_instring_list(',', conf.common.spacers)]
