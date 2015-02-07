@@ -95,8 +95,12 @@ class EpisodeParser:
 		# there's a number, it's episode or opening/ending
 		if self.number != None:
 		
+			# automatic rename
+			if self.cfg_data.rename == '-': source_rename = self.id
+			else: source_rename = self.cfg_data.rename
+		
 			source_data = {
-				'rename': self.cfg_data.rename,
+				'rename': source_rename,
 				'number': self.add_zeros(self.number, self.cfg_data.digits),
 				'number2d': self.add_zeros(self.number, 2)
 			}
@@ -183,6 +187,7 @@ class EpisodeDistributor:
 			return False
 		
 		# show results
+		# print self.episode_parser.new_filename # test line
 		pass
 		
 		# log them
