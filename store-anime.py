@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.1.0
+#  - Version:   1.1.1
 #  - Created:   2015/01/28
-#  - Updated:   2015/02/08
+#  - Updated:   2015/02/09
 # ----------------------------------------------------------------------------
 # This is a from scratch clean version of a program I wrote years ago.
 # I was tired of manually renaming and moving my anime downloads, so I wanted
@@ -226,8 +226,8 @@ class TrashRemover:
 	def clean_all(self):
 		# remove empty folders and torrents
 		for path in self.paths:
-			self.remove_empty_folders(path, True)
-			self.remove_torrents(path)
+			if conf.cleanup.remove_empty_folders == 'yes': self.remove_empty_folders(path, True)
+			if conf.cleanup.remove_base_torrents == 'yes': self.remove_base_torrents(path)
 		
 	def remove_empty_folders(self, path, not_this = False):
 		if not isdir(path):
@@ -246,7 +246,7 @@ class TrashRemover:
 		files = listdir(path)
 		if len(files) == 0: rmdir(path)
 			
-	def remove_torrents(self, path):
+	def remove_base_torrents(self, path):
 		torrents = glob(join(path, '*.torrent'))
 		for file in torrents:
 			try: unlink(file)

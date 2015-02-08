@@ -16,6 +16,10 @@ default_pattern: %(rename)s %(number)s
 max_process_dots: 10
 max_shortcuts: 15
 
+[cleanup]
+remove_empty_folders: yes
+remove_base_torrents: yes
+
 [symbols]
 dot: ·
 error: E
