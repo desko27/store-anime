@@ -39,7 +39,7 @@ class AnimeConfig(Config):
 	def get_extra_goto_list(self, show):
 		section = '%s:extra-goto' % show
 		if not conf_exists(self[section]): return []
-		return [dict(zip(['condition', 'path'], get_instring_list('|', e))) for e in self.get_values_from_section(section)]
+		return [dict(zip(['conditions', 'path'], get_instring_list('|', e))) for e in self.get_values_from_section(section)]
 	
 class EpisodesCollector:
 	""" Iterates over directories to collect all the found episodes. """
@@ -163,22 +163,28 @@ class EpisodeDistributor:
 		self.episode_parser = episode_parser
 		
 	def store(self):
-		# read extra goto list and change goto value if necessary
+		# read extra goto list and change goto value based on the set conditions
 		for extra_goto in self.episode_parser.anime_conf.get_extra_goto_list(self.episode_parser.id):
+			for condition in [c.strip() for c in extra_goto['conditions'].split('&&')]:
 			
-			var = get_instring_var('=', extra_goto['condition'])
-			if var['name'] == 'range':
+				var = get_instring_var('=', condition)
+				if var['name'] == 'range':
+					
+					range = get_instring_range('-', var['value'])
+					if range['start'] <= self.episode_parser.number <= range['end']:
+						continue
+					
+				elif var['name'] == 'contains':
+					
+					if var['value'].lower() in self.episode_parser.filename_wellspaced.lower():
+						continue
+						
+				break
 				
-				range = get_instring_range('-', var['value'])
-				if range['start'] <= self.episode_parser.number <= range['end']:
-					self.episode_parser.goto = extra_goto['path']
-					break
-				
-			elif var['name'] == 'contains':
-				
-				if var['value'].lower() in self.episode_parser.filename_wellspaced.lower():
-					self.episode_parser.goto = extra_goto['path']
-					break
+			# line of conditions meet
+			else:
+				self.episode_parser.goto = extra_goto['path']
+				break
 		
 		# try to move it
 		try:
@@ -187,7 +193,7 @@ class EpisodeDistributor:
 			return False
 		
 		# show results
-		# print self.episode_parser.new_filename # test line
+		# print join(self.episode_parser.goto, self.episode_parser.new_filename) # test line
 		pass
 		
 		# log them
