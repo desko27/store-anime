@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.0.4b
+#  - Version:   1.0.5
 #  - Created:   2015/01/28
-#  - Updated:   2015/02/07
+#  - Updated:   2015/02/08
 # ----------------------------------------------------------------------------
 # This is a from scratch clean version of a program I wrote years ago.
 # I was tired of manually renaming and moving my anime downloads, so I wanted
