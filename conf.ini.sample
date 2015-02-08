@@ -1,9 +1,7 @@
-[common]
-spacers: _
-extensions: mkv, mp4, avi
-max_sense_episode_number: 5000
-default_pattern: %(rename)s %(number)s
-max_shortcuts: 15
+[source-folders]
+1: C:\Path\To\Downloads1
+2: C:\Path\To\Downloads2
+3: C:\Path\To\Downloads3
 
 [paths]
 mplayer:	C:\Path\To\Your\MediaPlayer.exe
@@ -11,7 +9,14 @@ sources:	anime.ini
 log:		log_file.txt
 shortcuts:	shortcuts-log
 
-[source-folders]
-1: C:\Path\To\Downloads1
-2: C:\Path\To\Downloads2
-3: C:\Path\To\Downloads3
+[common]
+extensions: mkv, mp4, avi
+max_sense_episode_number: 5000
+default_pattern: %(rename)s %(number)s
+max_process_dots: 10
+max_shortcuts: 15
+
+[symbols]
+dot: ·
+error: E
+spacers: _

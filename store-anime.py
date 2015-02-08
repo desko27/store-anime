@@ -129,7 +129,7 @@ class EpisodeParser:
 			self.new_filename += '.%s' % self.file_extension
 	
 	def set_filename_wellspaced(self):
-		different_spacer_strings = [self.filename.replace(spacer, ' ') for spacer in get_instring_list(',', conf.common.spacers)]
+		different_spacer_strings = [self.filename.replace(spacer, ' ') for spacer in get_instring_list(',', conf.symbols.spacers)]
 		self.filename_wellspaced = max(different_spacer_strings, key = lambda x: x.count(' '))
 		
 	def set_number(self):
@@ -192,14 +192,18 @@ class EpisodeDistributor:
 		except:
 			return False
 		
-		# show results
-		# print join(self.episode_parser.goto, self.episode_parser.new_filename) # test line
-		pass
-		
-		# log them
-		pass
-		
 		return True
+	
+class DistributionReporter:
+	
+	def __init__(self):
+		self.distributed = []
+		
+	def append(self, episode_distributor):
+		self.distributed.append(episode_distributor)
+		
+	def get_count(self):
+		return len(self.distributed)
 	
 class Logger:
 	
@@ -250,8 +254,8 @@ class TrashRemover:
 	
 class FinalMenu:
 	
-	def __init__(self, successful_files):
-		self.successful_files = successful_files
+	def __init__(self, distribution_reporter):
+		self.distribution_reporter = distribution_reporter
 		
 	def interact(self):
 		pass
@@ -270,31 +274,59 @@ if __name__ == '__main__':
 	episodes_collector = EpisodesCollector(source_folders, get_instring_list(',', conf.common.extensions))
 	files = episodes_collector.get_files()
 	
-	# iterate over found files
-	successful_files = []
+	# iterate over found files and get episode parsers
+	episode_parsers = []
 	for file in files:
 	
-		# parse episode
 		episode_parser = EpisodeParser(file, anime_conf)
 		if not episode_parser.matches_show():
 			continue
 			
-		# distribute to wanted location
-		episode_distributor = EpisodeDistributor(episode_parser)
-		if not episode_distributor.store():
-			continue
+		episode_parsers.append(episode_parser)
 		
-		# log a success
-		successful_files.append(file)
-		logger = Logger()
-		logger.save_line()
-		logger.save_shortcut()
+	# group episodes by anime name
+	episode_groups = {}
+	for episode_parser in episode_parsers:
+	
+		if not episode_groups.has_key(episode_parser.id):
+			episode_groups[episode_parser.id] = []
+		
+		episode_groups[episode_parser.id].append(episode_parser)
+	
+	# iterate over groups to distribute episodes
+	print 'Processing episodes...\n'
+	global_distribution_reporter = DistributionReporter()
+	for id in sorted(episode_groups.keys()):
+		
+		print ' >> %s' % id,
+		if len(episode_groups[id]) > int(conf.common.max_process_dots):
+			print conf.symbols.dot * 3,
+			dots = False
+		else: dots = True
+		
+		local_distribution_reporter = DistributionReporter()
+		for episode_parser in episode_groups[id]:
+		
+			episode_distributor = EpisodeDistributor(episode_parser)
+			if not episode_distributor.store():
+				print conf.symbols.error,
+				continue
+			
+			if dots: print conf.symbols.dot,
+			local_distribution_reporter.append(episode_distributor)
+			global_distribution_reporter.append(episode_distributor)
+			
+			logger = Logger()
+			logger.save_line()
+			logger.save_shortcut()
+			
+		print 'x%i' % local_distribution_reporter.get_count()
 		
 	# clean trash
 	trash_remover = TrashRemover(source_folders)
 	trash_remover.clean_all()
 	
 	# show final menu
-	final_menu = FinalMenu(successful_files)
+	final_menu = FinalMenu(global_distribution_reporter)
 	final_menu.interact()
 	
