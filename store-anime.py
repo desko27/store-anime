@@ -11,7 +11,7 @@
 # I was tired of manually renaming and moving my anime downloads, so I wanted
 # a script to do it for me.
 
-from os.path import basename, isdir, join, exists
+from os.path import basename, dirname, isdir, join, exists
 from os import listdir, walk, rmdir, unlink, rename as move_file
 from fnmatch import filter as fnfilter
 from glob import glob
@@ -187,10 +187,8 @@ class EpisodeDistributor:
 				break
 		
 		# try to move it
-		try:
-			move_file(self.episode_parser.file, join(self.episode_parser.goto, self.episode_parser.new_filename))
-		except:
-			return False
+		try: move_file(self.episode_parser.file, join(self.episode_parser.goto, self.episode_parser.new_filename))
+		except: return False
 		
 		return True
 	
@@ -204,6 +202,13 @@ class DistributionReporter:
 		
 	def get_count(self):
 		return len(self.distributed)
+		
+	def get_done_files(self):
+		return [e.episode_parser.file for e in self.distributed]
+		
+	def get_done_locations(self):
+		done_files = self.get_done_files()
+		return set([dirname(e) for e in done_files])
 	
 class Logger:
 	
@@ -220,14 +225,15 @@ class TrashRemover:
 	""" * Removes empty folders (recursive).
 		* Removes torrent files (only on base directory). """
 
-	def __init__(self, paths):
+	def __init__(self, paths, done_locations):
 		self.paths = paths
+		self.done_locations = done_locations
 		
 	def clean_all(self):
 		# remove empty folders and torrents
 		for path in self.paths:
-			if conf.cleanup.remove_empty_folders == 'yes': self.remove_empty_folders(path, True)
-			if conf.cleanup.remove_base_torrents == 'yes': self.remove_base_torrents(path)
+			if conf.cleanup.empty_folders == 'yes': self.remove_empty_folders(path, True)
+			if conf.cleanup.base_torrents == 'yes': self.remove_base_torrents(path)
 		
 	def remove_empty_folders(self, path, not_this = False):
 		if not isdir(path):
@@ -237,12 +243,11 @@ class TrashRemover:
 		files = listdir(path)
 		if len(files):
 			for f in files:
-				fullpath = join(path, f)
-				if isdir(fullpath):
-					self.remove_empty_folders(fullpath)
+				nextpath = join(path, f)
+				if isdir(nextpath): self.remove_empty_folders(nextpath)
 	 
 		# if folder empty, delete it
-		if not_this: return
+		if not_this or path not in self.done_locations: return
 		files = listdir(path)
 		if len(files) == 0: rmdir(path)
 			
@@ -323,7 +328,7 @@ if __name__ == '__main__':
 		print 'x%i' % local_distribution_reporter.get_count()
 		
 	# clean trash
-	trash_remover = TrashRemover(source_folders)
+	trash_remover = TrashRemover(source_folders, global_distribution_reporter.get_done_locations())
 	trash_remover.clean_all()
 	
 	# show final menu
