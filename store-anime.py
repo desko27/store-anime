@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.2.0
+#  - Version:   1.3.0
 #  - Created:   2015/01/28
 #  - Updated:   2015/02/14
 # ----------------------------------------------------------------------------
@@ -11,14 +11,16 @@
 # I was tired of manually renaming and moving my anime downloads, so I wanted
 # a script to do it for me.
 
+from os import listdir, walk, makedirs, rmdir, unlink, rename as move_file
 from os.path import basename, dirname, isdir, join, exists
-from os import listdir, walk, rmdir, unlink, rename as move_file
-from fnmatch import filter as fnfilter
 from subprocess import Popen as open_process
+from fnmatch import filter as fnfilter
 from glob import glob
+from sys import argv
+import re
 
 # custom classes
-from class_Config import Config, conf_exists
+from class_Config import Config, conf_exists, conf_exists_value
 
 # ---------------------------------------------------------------------------
 # functions
@@ -73,36 +75,38 @@ class EpisodeParser:
 		self.file = file
 		self.filename = basename(file)
 		self.file_extension = self.filename.rsplit('.', 1)[1]
-		self.set_filename_wellspaced()
-		self.set_number()
+		self.set_wellspaced_filename()
+		self.set_filename_number()
 		self.anime_conf = anime_conf
-		self.id = self.goto = self.cfg_data = self.new_filename = None
+		self.id = self.rename = self.goto = self.fansub = self.cfg_data = self.new_filename = None
 		
 	def matches_show(self):
 		for e in self.anime_conf.get_shows():
 			if e.lower() in self.filename_wellspaced.lower():
 				self.id = e
 				self.cfg_data = self.anime_conf[e]
-				self.goto = self.cfg_data.goto
 				return True
+				
 		return False
 		
 	def generate_new_filename(self):
-		# allow only move when rename field is missing
-		if not conf_exists(self.cfg_data.rename):
+		self.set_context_data()
+	
+		# allow only move when rename and automatic fields are missing
+		if not conf_exists(self.cfg_data.rename) and self.cfg_data.goto != 'auto':
 			self.new_filename = self.filename
 			return
 	
 		# there's a number, it's episode or opening/ending
 		if self.number != None:
 		
-			# automatic rename
-			if self.cfg_data.rename == '-': source_rename = self.id
-			else: source_rename = self.cfg_data.rename
-		
+			# values influenced by automatic options
+			if self.cfg_data.goto == 'auto': source_digits = conf.auto.digits
+			else: source_digits = self.cfg_data.digits
+			
 			source_data = {
-				'rename': source_rename,
-				'number': self.add_zeros(self.number, self.cfg_data.digits),
+				'rename': self.rename,
+				'number': self.add_zeros(self.number, source_digits),
 				'number2d': self.add_zeros(self.number, 2)
 			}
 			
@@ -128,12 +132,26 @@ class EpisodeParser:
 		# add extension if needed
 		if not self.new_filename.endswith('.%s' % self.file_extension):
 			self.new_filename += '.%s' % self.file_extension
+		
+	def set_context_data(self):
+		self.set_filename_fansub()
+		self.set_conf_rename()
+		self.set_conf_goto()
+		
+	def set_conf_goto(self):
+		if self.cfg_data.goto == 'auto':
+			self.goto = join(conf.auto.goto, conf.auto.folder_pattern % {'name': self.rename, 'fansub': self.fansub})		
+		else: self.goto = self.cfg_data.goto
+		
+	def set_conf_rename(self):
+		if not conf_exists(self.cfg_data.rename) or conf_exists_value(self.cfg_data.rename, '-'): self.rename = self.id
+		else: self.rename = self.cfg_data.rename
 	
-	def set_filename_wellspaced(self):
+	def set_wellspaced_filename(self):
 		different_spacer_strings = [self.filename.replace(spacer, ' ') for spacer in get_instring_list(',', conf.symbols.spacers)]
 		self.filename_wellspaced = max(different_spacer_strings, key = lambda x: x.count(' '))
 		
-	def set_number(self):
+	def set_filename_number(self):
 		filename_only = self.filename_wellspaced.rsplit('.', 1)[0] # no extension
 		for word in reversed(filename_only.split()):
 			
@@ -155,6 +173,9 @@ class EpisodeParser:
 	def add_zeros(self, number, digits):
 		number_str = str(number)
 		return ('0'*(int(digits)-len(number_str))) + number_str
+		
+	def set_filename_fansub(self):
+		self.fansub = re.search(r'\[(\w+)\]', self.filename).group(1)
 	
 class EpisodeDistributor:
 	""" Sends a episode file to the wanted destiny. """
@@ -188,10 +209,17 @@ class EpisodeDistributor:
 				self.episode_parser.goto = extra_goto['path']
 				break
 		
-		# try to move it
 		self.dest = join(self.episode_parser.goto, self.episode_parser.new_filename)
-		try: move_file(self.episode_parser.file, self.dest)
-		except: return False
+		if exists(self.dest): return False
+
+		# moving process
+		if not debug:
+		
+			if not exists(self.episode_parser.goto) and conf.common.make_no_existing_dirs:
+				makedirs(self.episode_parser.goto)
+			
+			try: move_file(self.episode_parser.file, self.dest)
+			except: return False
 		
 		return True
 	
@@ -286,6 +314,9 @@ class FinalMenu:
 # ---------------------------------------------------------------------------
 if __name__ == '__main__':
 	
+	# debug argument
+	debug = len(argv) > 1 and argv[1] == 'debug'
+	
 	# retrieve config values
 	conf = Config('conf.ini')
 	anime_conf = AnimeConfig(conf.paths.sources)
@@ -337,18 +368,25 @@ if __name__ == '__main__':
 			local_distribution_reporter.append(episode_distributor)
 			global_distribution_reporter.append(episode_distributor)
 			
-			logger = Logger()
-			logger.save_line()
-			logger.save_shortcut()
+			if not debug:
+				logger = Logger()
+				logger.save_line()
+				logger.save_shortcut()
 			
 		print 'x%i' % local_distribution_reporter.get_done_files_count()
 		
 	# clean trash
-	trash_remover = TrashRemover(source_folders, global_distribution_reporter.get_done_locations())
-	trash_remover.clean_all()
+	if not debug:
+		trash_remover = TrashRemover(source_folders, global_distribution_reporter.get_done_locations())
+		trash_remover.clean_all()
+	
+	# debug destinies list
+	if debug:
+		print '\n -- [Debug] Destinies list --'
+		for e in global_distribution_reporter.distributed: print e.dest
 	
 	# show final menu
 	final_menu = FinalMenu(global_distribution_reporter)
 	final_menu.print_results()
-	final_menu.interact()
+	if not debug: final_menu.interact()
 	

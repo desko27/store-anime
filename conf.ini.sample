@@ -3,6 +3,11 @@
 2: C:\Path\To\Downloads2
 3: C:\Path\To\Downloads3
 
+[auto]
+goto: C:\Path\To\Your\Default\Anime\Folder
+folder_pattern: %(name)s (%(fansub)s)
+digits: 2
+
 [paths]
 mplayer:	C:\Path\To\Your\MediaPlayer.exe
 sources:	anime.ini
@@ -15,6 +20,7 @@ max_sense_episode_number: 5000
 default_pattern: %(rename)s %(number)s
 max_process_dots: 10
 max_shortcuts: 15
+make_no_existing_dirs: yes
 
 [cleanup]
 empty_folders: yes
