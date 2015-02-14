@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.3.0
+#  - Version:   1.3.1
 #  - Created:   2015/01/28
 #  - Updated:   2015/02/14
 # ----------------------------------------------------------------------------
@@ -300,8 +300,11 @@ class FinalMenu:
 		print 3*' ' + '* Total episodes: x%i' % self.distribution_reporter.get_done_files_count()
 		
 	def interact(self):
+		if self.distribution_reporter.get_done_files_count() == 0:
+			raw_input('\n No files were processed...')
+			return
+	
 		if raw_input('\n Want to show them on explorer? y/n: ') == 'y':
-		
 			opened_paths = []
 			for e in self.distribution_reporter.distributed:
 			
