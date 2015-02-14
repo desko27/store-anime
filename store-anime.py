@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.1.2
+#  - Version:   1.2.0
 #  - Created:   2015/01/28
-#  - Updated:   2015/02/09
+#  - Updated:   2015/02/14
 # ----------------------------------------------------------------------------
 # This is a from scratch clean version of a program I wrote years ago.
 # I was tired of manually renaming and moving my anime downloads, so I wanted
@@ -14,6 +14,7 @@
 from os.path import basename, dirname, isdir, join, exists
 from os import listdir, walk, rmdir, unlink, rename as move_file
 from fnmatch import filter as fnfilter
+from subprocess import Popen as open_process
 from glob import glob
 
 # custom classes
@@ -161,6 +162,7 @@ class EpisodeDistributor:
 	def __init__(self, episode_parser):
 		episode_parser.generate_new_filename()
 		self.episode_parser = episode_parser
+		self.dest = None
 		
 	def store(self):
 		# read extra goto list and change goto value based on the set conditions
@@ -187,20 +189,22 @@ class EpisodeDistributor:
 				break
 		
 		# try to move it
-		try: move_file(self.episode_parser.file, join(self.episode_parser.goto, self.episode_parser.new_filename))
+		self.dest = join(self.episode_parser.goto, self.episode_parser.new_filename)
+		try: move_file(self.episode_parser.file, self.dest)
 		except: return False
 		
 		return True
 	
 class DistributionReporter:
 	
-	def __init__(self):
+	def __init__(self, animes_count = 0):
+		self.animes_count = animes_count
 		self.distributed = []
 		
 	def append(self, episode_distributor):
 		self.distributed.append(episode_distributor)
 		
-	def get_count(self):
+	def get_done_files_count(self):
 		return len(self.distributed)
 		
 	def get_done_files(self):
@@ -262,8 +266,20 @@ class FinalMenu:
 	def __init__(self, distribution_reporter):
 		self.distribution_reporter = distribution_reporter
 		
+	def print_results(self):
+		print ''
+		print 3*' ' + '* Anime: (%i)' % self.distribution_reporter.animes_count
+		print 3*' ' + '* Total episodes: x%i' % self.distribution_reporter.get_done_files_count()
+		
 	def interact(self):
-		pass
+		if raw_input('\n Want to show them on explorer? y/n: ') == 'y':
+		
+			opened_paths = []
+			for e in self.distribution_reporter.distributed:
+			
+				if not dirname(e.dest) in opened_paths:
+					open_process(r'explorer /select,"' + e.dest + '"')
+					opened_paths.append(dirname(e.dest))
 
 # ---------------------------------------------------------------------------
 # program
@@ -300,7 +316,7 @@ if __name__ == '__main__':
 	
 	# iterate over groups to distribute episodes
 	print 'Processing episodes...\n'
-	global_distribution_reporter = DistributionReporter()
+	global_distribution_reporter = DistributionReporter(len(episode_groups))
 	for id in sorted(episode_groups.keys()):
 		
 		print ' >> %s' % id,
@@ -325,7 +341,7 @@ if __name__ == '__main__':
 			logger.save_line()
 			logger.save_shortcut()
 			
-		print 'x%i' % local_distribution_reporter.get_count()
+		print 'x%i' % local_distribution_reporter.get_done_files_count()
 		
 	# clean trash
 	trash_remover = TrashRemover(source_folders, global_distribution_reporter.get_done_locations())
@@ -333,5 +349,6 @@ if __name__ == '__main__':
 	
 	# show final menu
 	final_menu = FinalMenu(global_distribution_reporter)
+	final_menu.print_results()
 	final_menu.interact()
 	
