@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------
 #  - Author:    desko27
 #  - Email:     desko27@gmail.com
-#  - Version:   1.3.1
+#  - Version:   1.3.2
 #  - Created:   2015/01/28
-#  - Updated:   2015/02/14
+#  - Updated:   2015/02/20
 # ----------------------------------------------------------------------------
 # This is a from scratch clean version of a program I wrote years ago.
 # I was tired of manually renaming and moving my anime downloads, so I wanted
@@ -88,7 +88,7 @@ class EpisodeParser:
 				return True
 				
 		return False
-		
+			
 	def generate_new_filename(self):
 		self.set_context_data()
 	
@@ -127,11 +127,19 @@ class EpisodeParser:
 			
 		# there's not a number, should ask what to do (let me write a filename)
 		else:
-			self.new_filename = raw_input(u'[%s] new filename -> ' % self.filename)
+			self.new_filename = self.input_exception('Cannot detect episode number, input desired new name:')
 			
 		# add extension if needed
 		if not self.new_filename.endswith('.%s' % self.file_extension):
 			self.new_filename += '.%s' % self.file_extension
+		
+	def input_exception(self, msg):
+		print '\n'
+		print 6*' ' + '-- ' + self.filename
+		print 7*' ' + '(!) ' + msg + '\n'
+		result = raw_input(8*' ' + '>> ')
+		print '\n' + 12*' ',
+		return result;
 		
 	def set_context_data(self):
 		self.set_filename_fansub()
@@ -175,7 +183,8 @@ class EpisodeParser:
 		return ('0'*(int(digits)-len(number_str))) + number_str
 		
 	def set_filename_fansub(self):
-		self.fansub = re.search(r'\[(\w+)\]', self.filename).group(1)
+		try: self.fansub = re.search(r'\[(\w+)\]', self.filename).group(1)
+		except: self.fansub = ''
 	
 class EpisodeDistributor:
 	""" Sends a episode file to the wanted destiny. """
