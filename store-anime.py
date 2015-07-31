@@ -20,7 +20,7 @@ from sys import argv
 import re
 
 # custom classes
-from class_Config import Config, conf_exists, conf_exists_value
+from custom.Config import Config, conf_exists, conf_exists_value
 
 # ---------------------------------------------------------------------------
 # functions
