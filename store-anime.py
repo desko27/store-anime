@@ -187,7 +187,7 @@ class EpisodeParser:
 		except: self.fansub = ''
 	
 class EpisodeDistributor:
-	""" Sends a episode file to the wanted destiny. """
+	""" Sends an episode file to the wanted destiny. """
 	
 	def __init__(self, episode_parser):
 		episode_parser.generate_new_filename()
