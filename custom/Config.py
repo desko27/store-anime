@@ -23,6 +23,6 @@ conf_exists_value = lambda e, value: conf_exists(e) and e == value
 # ---------------------------------------------------------------------------
 class Config(INIConfig):
 
-	def __init__(self, file): super(Config, self).__init__(uopen(file, 'r', 'utf8'))
-	def get_sections(self): return [e for e in self]
-	def get_values_from_section(self, section): return [self[section][e] for e in self[section]]
+    def __init__(self, file): super(Config, self).__init__(uopen(file, 'r', 'utf8'))
+    def get_sections(self): return [e for e in self]
+    def get_values_from_section(self, section): return [self[section][e] for e in self[section]]
